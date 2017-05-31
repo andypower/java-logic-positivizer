@@ -42,16 +42,15 @@ public class Fix {
 
             @Override
             public Visitable visit(FieldAccessExpr n, Void arg) {
-                Optional<Visitable> simpleName = n.getScope()
-                        .filter(s -> s instanceof EnclosedExpr)
-                        .map(s -> (EnclosedExpr) s)
-                        .flatMap(s -> s.getInner()
-                                .filter(i -> i instanceof CastExpr)
-                                .map(i -> (CastExpr) i)
-                                .filter(i -> i.getExpression() instanceof ThisExpr)
-                                .map(t -> new NameExpr(n.getName()))
-                        );
-
+                Optional<Visitable> simpleName = Optional.empty();
+                final Expression scope = n.getScope();
+                if (scope instanceof EnclosedExpr) {
+                    simpleName = ((EnclosedExpr) scope).getInner()
+                            .filter(i -> i instanceof CastExpr)
+                            .map(i -> (CastExpr) i)
+                            .filter(i -> i.getExpression() instanceof ThisExpr)
+                            .map(t -> new NameExpr(n.getName()));
+                }
                 return simpleName.orElse(super.visit(n, arg));
             }
         }, null);
